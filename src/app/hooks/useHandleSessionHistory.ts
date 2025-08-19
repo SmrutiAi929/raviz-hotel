@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
+
 import OpenAI from 'openai';
 
 async function correctTextScript(text: string): Promise<string> {
@@ -40,6 +41,8 @@ async function correctTextScript(text: string): Promise<string> {
   }
 }
 
+
+
 export function useHandleSessionHistory() {
   const {
     transcriptItems,
@@ -50,6 +53,8 @@ export function useHandleSessionHistory() {
   } = useTranscript();
 
   const { logServerEvent } = useEvent();
+  
+
 
   /* ----------------------- helpers ------------------------- */
 
@@ -180,6 +185,9 @@ export function useHandleSessionHistory() {
     if (itemId) {
       console.log(`[DEBUG] handleTranscriptionCompleted: finalTranscript="${finalTranscript}"`);
       await updateTranscriptMessage(itemId, finalTranscript, false);
+      
+
+      
       // Use the ref to get the latest transcriptItems
       const transcriptItem = transcriptItems.find((i) => i.itemId === itemId);
       updateTranscriptItem(itemId, { status: 'DONE' });

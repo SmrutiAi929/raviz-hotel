@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   title: "SingleInterface Voice Agent",
   description: "Advanced voice agents with multilingual support.",
   icons: {
-    icon: '/pragyaa-logo.svg',
-    shortcut: '/pragyaa-logo.svg',
-    apple: '/pragyaa-logo.svg',
+    icon: '/pragya-logo.png',
+    shortcut: '/pragya-logo.png',
+    apple: '/pragya-logo.png',
   },
 };
 

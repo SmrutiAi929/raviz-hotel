@@ -6,7 +6,7 @@ import {
   ShareIcon,
   ClockIcon,
   CheckCircleIcon,
-  BuildingStorefrontIcon,
+  BuildingOfficeIcon,
   PhoneIcon,
   MapPinIcon,
   EnvelopeIcon,
@@ -15,9 +15,12 @@ import {
   UserIcon,
   HomeIcon,
   GlobeAltIcon,
-  BuildingOfficeIcon,
   CreditCardIcon,
-  TruckIcon
+  TruckIcon,
+  UsersIcon,
+  StarIcon,
+  ExclamationTriangleIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/solid';
 import { useDataCollection } from '../contexts/DataCollectionContext';
 
@@ -46,7 +49,7 @@ const AgentVisualizer = ({ isExpanded }: { isExpanded: boolean }) => {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `store-verification-data-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `raviz-hotel-guest-data-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -56,52 +59,51 @@ const AgentVisualizer = ({ isExpanded }: { isExpanded: boolean }) => {
   // Icon mapping for data points
   const getDataPointIcon = (dataId: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
-      'store_id': IdentificationIcon,
-      'address_line_1': HomeIcon,
-      'locality': MapPinIcon,
-      'landmark': BuildingStorefrontIcon,
-      'city': BuildingOfficeIcon,
-      'state': GlobeAltIcon,
-      'pin_code': MapPinIcon,
-      'business_hours': CalendarIcon,
-      'weekly_off': CalendarIcon,
-      'main_phone_std': PhoneIcon,
-      'manager_number': PhoneIcon,
-      'store_email': EnvelopeIcon,
-      'manager_email': EnvelopeIcon,
-      'designation': UserIcon,
-      'parking_options': TruckIcon,
-      'payment_methods': CreditCardIcon,
-      'alternate_number': PhoneIcon,
+      'guest_name': UserIcon,
+      'reservation_number': IdentificationIcon,
+      'check_in_date': CalendarIcon,
+      'check_out_date': CalendarIcon,
+      'room_number_type': BuildingOfficeIcon,
+      'number_of_guests': UsersIcon,
+      'contact_number': PhoneIcon,
+      'email_id': EnvelopeIcon,
+      'special_requests': ChatBubbleLeftRightIcon,
+      'airport_pickup': TruckIcon,
+      'food_preferences': StarIcon,
+      'payment_method': CreditCardIcon,
+      'loyalty_program': StarIcon,
+      'complaint_issue': ExclamationTriangleIcon,
+      'escalation_status': ExclamationTriangleIcon,
+      'additional_notes': ChatBubbleLeftRightIcon,
     };
     return iconMap[dataId] || ClipboardDocumentListIcon;
   };
 
   // Static data
   const currentAgent = {
-    name: 'Authentication',
-    description: 'Collecting store verification data.',
+    name: 'RAVIZ Hotel Agent',
+    description: 'Collecting guest information and handling hotel services.',
     status: 'Active',
   };
 
   const handoffAgents = [
-    { name: 'Returns' },
-    { name: 'Sales' },
-    { name: 'Human Agent' },
+    { name: 'Hotel Staff' },
+    { name: 'Manager' },
   ];
 
   const metrics = [
     { name: 'Data Completion', value: `${completionPercentage}%`, icon: ClipboardDocumentListIcon },
     { name: 'Call Duration', value: '2:34', icon: ClockIcon },
+    { name: 'Guest Satisfaction', value: '4.8/5', icon: StarIcon },
   ];
 
   return (
     <div className="flex-1 bg-gray-100 rounded-lg overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-500 text-white p-4 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white p-4 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold">Data Collection Center</h2>
-          <p className="text-sm text-purple-200">Live Store Verification</p>
+          <h2 className="text-xl font-bold">RAVIZ Hotel Data Collection</h2>
+          <p className="text-sm text-blue-200">Live Customer Onboarding</p>
         </div>
         <div className="flex items-center space-x-2">
           <span className="relative flex h-3 w-3">
@@ -133,7 +135,7 @@ const AgentVisualizer = ({ isExpanded }: { isExpanded: boolean }) => {
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-md font-semibold text-gray-700 flex items-center">
               <ClipboardDocumentListIcon className="h-5 w-5 mr-2 text-gray-500" />
-              Data Collection Progress
+              Guest Information Collection
             </h3>
             <button
               onClick={downloadData}
@@ -195,13 +197,13 @@ const AgentVisualizer = ({ isExpanded }: { isExpanded: boolean }) => {
         <div>
           <h3 className="text-md font-semibold text-gray-700 mb-2 flex items-center">
             <ShareIcon className="h-5 w-5 mr-2 text-gray-500" />
-            Agent Network
+            RAVIZ Hotel Services
           </h3>
           <div className="bg-white rounded-lg p-3 shadow-sm">
-            <p className="text-sm text-gray-500 mb-2">Can handoff to:</p>
+            <p className="text-sm text-gray-500 mb-2">Available services:</p>
             <div className="flex flex-wrap gap-2">
               {handoffAgents.map((agent) => (
-                <span key={agent.name} className="px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-sm font-medium">
+                <span key={agent.name} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                   {agent.name}
                 </span>
               ))}
@@ -209,58 +211,63 @@ const AgentVisualizer = ({ isExpanded }: { isExpanded: boolean }) => {
           </div>
         </div>
 
-        {/* Live Metrics */}
-        <div>
-          <h3 className="text-md font-semibold text-gray-700 mb-2 flex items-center">
-            <ClockIcon className="h-5 w-5 mr-2 text-gray-500" />
-            Session Metrics
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            {metrics.map((metric) => (
-              <div key={metric.name} className="bg-white rounded-lg p-3 shadow-sm flex items-center">
-                <metric.icon className="h-6 w-6 mr-3 text-green-500" />
-                <div>
-                  <p className="text-sm text-gray-500">{metric.name}</p>
-                  <p className="font-bold text-lg text-gray-800">{metric.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+                 {/* Live Metrics */}
+         <div>
+           <h3 className="text-md font-semibold text-gray-700 mb-2 flex items-center">
+             <ClockIcon className="h-5 w-5 mr-2 text-gray-500" />
+             Session Metrics
+           </h3>
+           <div className="bg-white rounded-lg p-3 shadow-sm">
+             <div className="flex items-center justify-between">
+               {metrics.map((metric, index) => (
+                 <div key={metric.name} className="flex items-center flex-1 justify-center">
+                   <metric.icon className="h-5 w-5 mr-2 text-green-500" />
+                   <div className="text-center">
+                     <p className="text-xs text-gray-500">{metric.name}</p>
+                     <p className="font-bold text-sm text-gray-800">{metric.value}</p>
+                   </div>
+                   {index < metrics.length - 1 && (
+                     <div className="mx-4 text-gray-300">|</div>
+                   )}
+                 </div>
+               ))}
+             </div>
+           </div>
+         </div>
 
         {/* Demo Buttons for Testing */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <p className="text-sm text-yellow-700 mb-2 font-medium">Demo: Simulate Data Capture</p>
+          <p className="text-sm text-yellow-700 mb-2 font-medium">Demo: Simulate RAVIZ Hotel Data Capture</p>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => captureDataPoint('store_id', 'SI-123456')}
+              onClick={() => captureDataPoint('guest_name', 'John Smith')}
               className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
             >
-              Store ID
+              Guest Name
             </button>
             <button
-              onClick={() => captureDataPoint('address_line_1', '123 Main Street, Shop No. 5')}
+              onClick={() => captureDataPoint('reservation_number', 'RZ-2024-001234')}
               className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
             >
-              Address Line 1
+              Reservation Number
             </button>
             <button
-              onClick={() => captureDataPoint('city', 'Mumbai')}
+              onClick={() => captureDataPoint('check_in_date', '2024-12-25')}
               className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
             >
-              City
+              Check-in Date
             </button>
             <button
-              onClick={() => captureDataPoint('main_phone_std', '+91-22-98765-43210')}
+              onClick={() => captureDataPoint('room_number_type', 'Room 205 - Deluxe Suite')}
               className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
             >
-              Phone with STD
+              Room Details
             </button>
             <button
-              onClick={() => captureDataPoint('payment_methods', 'Cash, UPI, Cards')}
+              onClick={() => captureDataPoint('special_requests', 'Early check-in, High floor')}
               className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
             >
-              Payment Methods
+              Special Requests
             </button>
           </div>
         </div>

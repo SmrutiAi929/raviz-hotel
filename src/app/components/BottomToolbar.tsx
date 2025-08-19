@@ -26,7 +26,7 @@ interface BottomToolbarProps {
   setIsEventsPaneExpanded: (val: boolean) => void;
   isAudioPlaybackEnabled: boolean;
   setIsAudioPlaybackEnabled: (val: boolean) => void;
-  codec: string;
+  codec: string; 
   onCodecChange: (newCodec: string) => void;
 }
 

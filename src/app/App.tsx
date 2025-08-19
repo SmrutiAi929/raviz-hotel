@@ -9,6 +9,7 @@ import Image from "next/image";
 // UI components
 import Transcript from "./components/Transcript";
 import AgentVisualizer from "./components/AgentVisualizer";
+
 import BottomToolbar from "./components/BottomToolbar";
 
 // Types
@@ -25,12 +26,11 @@ import { useDataCollection } from "./contexts/DataCollectionContext";
 
 // Agent configs
 import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
-import { customerServiceRetailScenario } from "@/app/agentConfigs/customerServiceRetail";
-import { chatSupervisorScenario } from "@/app/agentConfigs/chatSupervisor";
-import { helloMentorScenario } from "@/app/agentConfigs/helloMentor";
-import { customerServiceRetailCompanyName } from "@/app/agentConfigs/customerServiceRetail";
-import { chatSupervisorCompanyName } from "@/app/agentConfigs/chatSupervisor";
-import { helloMentorCompanyName } from "@/app/agentConfigs/helloMentor";
+import { customerServiceRetailScenario, customerServiceRetailCompanyName } from "@/app/agentConfigs/customerServiceRetail";
+import { chatSupervisorScenario, chatSupervisorCompanyName } from "@/app/agentConfigs/chatSupervisor";
+import { helloMentorScenario, helloMentorCompanyName } from "@/app/agentConfigs/helloMentor";
+import { ravizHotelScenario, ravizHotelCompanyName } from "@/app/agentConfigs/ravizHotel";
+
 import { simpleHandoffScenario } from "@/app/agentConfigs/simpleHandoff";
 
 // Map used by connect logic for scenarios defined via the SDK.
@@ -38,6 +38,7 @@ const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
   simpleHandoff: simpleHandoffScenario,
   SingleInterface: customerServiceRetailScenario,
   HelloMentor: helloMentorScenario,
+  RAVIZHotel: ravizHotelScenario,
   chatSupervisor: chatSupervisorScenario,
 };
 
@@ -138,17 +139,19 @@ function App() {
   useHandleSessionHistory();
 
   useEffect(() => {
-    let finalAgentConfig = searchParams.get("agentConfig");
-    if (!finalAgentConfig || !allAgentSets[finalAgentConfig]) {
-      finalAgentConfig = defaultAgentSetKey;
-      const url = new URL(window.location.toString());
-      url.searchParams.set("agentConfig", finalAgentConfig);
+    // Always use RAVIZHotel scenario
+    const finalAgentConfig = "RAVIZHotel";
+    const url = new URL(window.location.toString());
+    url.searchParams.set("agentConfig", finalAgentConfig);
+    
+    // Only update URL if it's different to avoid reload loop
+    if (searchParams.get("agentConfig") !== finalAgentConfig) {
       window.location.replace(url.toString());
       return;
     }
 
     const agents = allAgentSets[finalAgentConfig];
-    const agentKeyToUse = agents[0]?.name || "";
+    const agentKeyToUse = "ravizHotel"; // Always use RAVIZ Hotel Agent
 
     setSelectedAgentName(agentKeyToUse);
     setSelectedAgentConfigSet(agents);
@@ -210,48 +213,55 @@ function App() {
   };
 
   const connectToRealtime = async () => {
-    const agentSetKey = searchParams.get("agentConfig") || "default";
-    if (sdkScenarioMap[agentSetKey]) {
-      if (sessionStatus !== "DISCONNECTED") return;
-      setSessionStatus("CONNECTING");
+    const agentSetKey = "RAVIZHotel"; // Always use RAVIZ Hotel
+    
+    if (sessionStatus !== "DISCONNECTED") return;
+    setSessionStatus("CONNECTING");
 
-      try {
-        const EPHEMERAL_KEY = await fetchEphemeralKey();
-        if (!EPHEMERAL_KEY) return;
+    try {
+      const EPHEMERAL_KEY = await fetchEphemeralKey();
+      if (!EPHEMERAL_KEY) return;
 
-        // Ensure the selectedAgentName is first so that it becomes the root
-        const reorderedAgents = [...sdkScenarioMap[agentSetKey]];
-        const idx = reorderedAgents.findIndex((a) => a.name === selectedAgentName);
-        if (idx > 0) {
-          const [agent] = reorderedAgents.splice(idx, 1);
-          reorderedAgents.unshift(agent);
-        }
+      // Get the agents for RAVIZ Hotel scenario
+      const agents = sdkScenarioMap[agentSetKey];
+      
+      // Always use RAVIZ Hotel Agent
+      const agentToUse = "ravizHotel";
+      setSelectedAgentName("ravizHotel");
 
-        const companyName = agentSetKey === 'SingleInterface'
-          ? customerServiceRetailCompanyName
-          : agentSetKey === 'HelloMentor'
-          ? helloMentorCompanyName
-          : chatSupervisorCompanyName;
-        const guardrail = createModerationGuardrail(companyName);
-
-        await connect({
-          getEphemeralKey: async () => EPHEMERAL_KEY,
-          initialAgents: reorderedAgents,
-          audioElement: sdkAudioElement,
-          outputGuardrails: [guardrail],
-          extraContext: {
-            addTranscriptBreadcrumb,
-            preferredLanguage: preferredLanguage,
-            captureDataPoint,
-          },
-        });
-        
-        console.log(`[DEBUG] Connected with language preference: ${preferredLanguage}`);
-      } catch (err) {
-        console.error("Error connecting via SDK:", err);
-        setSessionStatus("DISCONNECTED");
+      // Ensure the selectedAgentName is first so that it becomes the root
+      const reorderedAgents = [...agents];
+      const idx = reorderedAgents.findIndex((a) => a.name === agentToUse);
+      if (idx > 0) {
+        const [agent] = reorderedAgents.splice(idx, 1);
+        reorderedAgents.unshift(agent);
       }
-      return;
+
+      // Always use RAVIZ Hotel company name
+      const companyName = ravizHotelCompanyName;
+      const guardrail = createModerationGuardrail(companyName);
+
+      await connect({
+        getEphemeralKey: async () => EPHEMERAL_KEY,
+        initialAgents: reorderedAgents,
+        audioElement: sdkAudioElement,
+        outputGuardrails: [guardrail],
+        extraContext: {
+          addTranscriptBreadcrumb,
+          preferredLanguage: preferredLanguage,
+          captureDataPoint,
+        },
+      });
+      
+      console.log(`[DEBUG] Connected with language preference: ${preferredLanguage}`);
+      
+      // Update session with optimized turn detection for immediate responses
+      setTimeout(() => {
+        updateSession(true);
+      }, 1000);
+    } catch (err) {
+      console.error("Error connecting via SDK:", err);
+      setSessionStatus("DISCONNECTED");
     }
   };
 
@@ -282,15 +292,15 @@ function App() {
     // Reflect Push-to-Talk UI state by (de)activating server VAD on the
     // backend. The Realtime SDK supports live session updates via the
     // `session.update` event.
-    const turnDetection = isPTTActive
-      ? null
-      : {
-          type: 'server_vad',
-          threshold: 0.9,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500,
-          create_response: true,
-        };
+            const turnDetection = isPTTActive
+          ? null
+                  : {
+              type: 'server_vad',
+              threshold: 0.85,
+              prefix_padding_ms: 400,
+              silence_duration_ms: 800,
+              create_response: true,
+            };
 
     sendEvent({
       type: 'session.update',
@@ -348,24 +358,9 @@ function App() {
     }
   };
 
-  const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newAgentConfig = e.target.value;
-    const url = new URL(window.location.toString());
-    url.searchParams.set("agentConfig", newAgentConfig);
-    window.location.replace(url.toString());
-  };
 
-  const handleSelectedAgentChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const newAgentName = e.target.value;
-    // Disconnect current session when changing agents
-    // User will need to manually reconnect with the new agent
-    if (sessionStatus === "CONNECTED" || sessionStatus === "CONNECTING") {
-      disconnectFromRealtime();
-    }
-    setSelectedAgentName(newAgentName);
-  };
+
+
 
   // Because we need a new connection, refresh the page when codec changes
   const handleCodecChange = (newCodec: string) => {
@@ -454,7 +449,12 @@ function App() {
     };
   }, [sessionStatus]);
 
-  const agentSetKey = searchParams.get("agentConfig") || "default";
+  const agentSetKey = "RAVIZHotel"; // Always use RAVIZ Hotel
+  
+  // Always ensure RAVIZ Hotel Agent is selected
+  if (!selectedAgentName) {
+    setSelectedAgentName("ravizHotel");
+  }
 
   return (
     <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
@@ -463,19 +463,23 @@ function App() {
           className="flex items-center cursor-pointer"
           onClick={() => window.location.reload()}
         >
-          <div>
+          <div className="flex-shrink-0 mr-3">
             <Image
-              src="/pragyaa-logo.png"
-              alt="Pragyaa Logo"
-              width={80}
-              height={0} // Set height to 0 and allow style to control it
-              style={{ height: 'auto' }} // This maintains the aspect ratio
-              className="mr-3"
+              src="/pragya-logo.png"
+              alt="Pragya Logo"
+              width={60}
+              height={60}
+              className="rounded-lg shadow-sm"
+              priority
+              onError={(e) => {
+                console.error('Failed to load Pragya logo');
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
-          <div>
-            VoiceAgent 2.0 <span className="text-gray-500"></span>
-          </div>
+                  <div className="flex items-center">
+            <span className="text-xl font-bold text-gray-800">VoiceAgent 2.0</span>
+        </div>
         </div>
         <div className="flex items-center">
           <label className="flex items-center text-base gap-1 mr-2 font-medium">
@@ -504,58 +508,19 @@ function App() {
             Scenario
           </label>
           <div className="relative inline-block">
-            <select
-              value={agentSetKey}
-              onChange={handleAgentChange}
-              className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
-            >
-              {Object.keys(allAgentSets).map((agentKey) => (
-                <option key={agentKey} value={agentKey}>
-                  {agentKey}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
-              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.44l3.71-3.21a.75.75 0 111.04 1.08l-4.25 3.65a.75.75 0 01-1.04 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
+            <div className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 font-normal text-gray-800 bg-white">
+              RAVIZ Hotel
             </div>
           </div>
 
-          {agentSetKey && (
+          {agentSetKey === 'RAVIZHotel' && (
             <div className="flex items-center ml-6">
               <label className="flex items-center text-base gap-1 mr-2 font-medium">
                 Agent
               </label>
               <div className="relative inline-block">
-                <select
-                  value={selectedAgentName}
-                  onChange={handleSelectedAgentChange}
-                  className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
-                >
-                  {selectedAgentConfigSet
-                    ?.map((agent) => (
-                    <option key={agent.name} value={agent.name}>
-                      {agent.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
-                  <svg
-                    className="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.44l3.71-3.21a.75.75 0 111.04 1.08l-4.25 3.65a.75.75 0 01-1.04 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                <div className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 font-normal text-gray-800 bg-white">
+                  RAVIZ Hotel Agent
                 </div>
               </div>
             </div>
