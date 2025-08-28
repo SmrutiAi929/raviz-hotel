@@ -25,25 +25,15 @@ import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useDataCollection } from "./contexts/DataCollectionContext";
 
 // Agent configs
-import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
-import { customerServiceRetailScenario, customerServiceRetailCompanyName } from "@/app/agentConfigs/customerServiceRetail";
-import { chatSupervisorScenario, chatSupervisorCompanyName } from "@/app/agentConfigs/chatSupervisor";
-import { helloMentorScenario, helloMentorCompanyName } from "@/app/agentConfigs/helloMentor";
-import { ravizHotelScenario, ravizHotelCompanyName } from "@/app/agentConfigs/ravizHotel";
-
-import { simpleHandoffScenario } from "@/app/agentConfigs/simpleHandoff";
-
-// Map used by connect logic for scenarios defined via the SDK.
-const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
-  simpleHandoff: simpleHandoffScenario,
-  SingleInterface: customerServiceRetailScenario,
-  HelloMentor: helloMentorScenario,
-  RAVIZHotel: ravizHotelScenario,
-  chatSupervisor: chatSupervisorScenario,
-};
+import { royalClinicScenario, royalClinicCompanyName } from "@/app/agentConfigs/royalClinic";
 
 import useAudioDownload from "./hooks/useAudioDownload";
 import { useHandleSessionHistory } from "./hooks/useHandleSessionHistory";
+
+// Map used by connect logic for scenarios defined via the SDK.
+const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
+  RoyalClinic: royalClinicScenario,
+};
 
 function App() {
   const searchParams = useSearchParams()!;
@@ -139,8 +129,8 @@ function App() {
   useHandleSessionHistory();
 
   useEffect(() => {
-    // Always use RAVIZHotel scenario
-    const finalAgentConfig = "RAVIZHotel";
+    // Always use RoyalClinic scenario
+    const finalAgentConfig = "RoyalClinic";
     const url = new URL(window.location.toString());
     url.searchParams.set("agentConfig", finalAgentConfig);
     
@@ -150,8 +140,8 @@ function App() {
       return;
     }
 
-    const agents = allAgentSets[finalAgentConfig];
-    const agentKeyToUse = "ravizHotel"; // Always use RAVIZ Hotel Agent
+    const agents = royalClinicScenario;
+    const agentKeyToUse = "royalClinic"; // Always use Royal Clinic Agent
 
     setSelectedAgentName(agentKeyToUse);
     setSelectedAgentConfigSet(agents);
@@ -213,7 +203,7 @@ function App() {
   };
 
   const connectToRealtime = async () => {
-    const agentSetKey = "RAVIZHotel"; // Always use RAVIZ Hotel
+    const agentSetKey = "RoyalClinic"; // Always use Royal Clinic
     
     if (sessionStatus !== "DISCONNECTED") return;
     setSessionStatus("CONNECTING");
@@ -222,12 +212,12 @@ function App() {
       const EPHEMERAL_KEY = await fetchEphemeralKey();
       if (!EPHEMERAL_KEY) return;
 
-      // Get the agents for RAVIZ Hotel scenario
+      // Get the agents for Royal Clinic scenario
       const agents = sdkScenarioMap[agentSetKey];
       
-      // Always use RAVIZ Hotel Agent
-      const agentToUse = "ravizHotel";
-      setSelectedAgentName("ravizHotel");
+      // Always use Royal Clinic Agent
+      const agentToUse = "royalClinic";
+      setSelectedAgentName("royalClinic");
 
       // Ensure the selectedAgentName is first so that it becomes the root
       const reorderedAgents = [...agents];
@@ -237,8 +227,8 @@ function App() {
         reorderedAgents.unshift(agent);
       }
 
-      // Always use RAVIZ Hotel company name
-      const companyName = ravizHotelCompanyName;
+      // Always use Royal Clinic company name
+      const companyName = royalClinicCompanyName;
       const guardrail = createModerationGuardrail(companyName);
 
       await connect({
@@ -449,11 +439,11 @@ function App() {
     };
   }, [sessionStatus]);
 
-  const agentSetKey = "RAVIZHotel"; // Always use RAVIZ Hotel
+  const agentSetKey = "RoyalClinic"; // Always use Royal Clinic
   
-  // Always ensure RAVIZ Hotel Agent is selected
+  // Always ensure Royal Clinic Agent is selected
   if (!selectedAgentName) {
-    setSelectedAgentName("ravizHotel");
+    setSelectedAgentName("royalClinic");
   }
 
   return (
@@ -492,7 +482,7 @@ function App() {
               className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
             >
               <option value="English">English</option>
-              <option value="Hindi">Hindi</option>
+              <option value="Arabic">العربية</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
               <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -509,18 +499,18 @@ function App() {
           </label>
           <div className="relative inline-block">
             <div className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 font-normal text-gray-800 bg-white">
-              RAVIZ Hotel
+              Royal Clinic Dubai
             </div>
           </div>
 
-          {agentSetKey === 'RAVIZHotel' && (
+          {agentSetKey === 'RoyalClinic' && (
             <div className="flex items-center ml-6">
               <label className="flex items-center text-base gap-1 mr-2 font-medium">
                 Agent
               </label>
               <div className="relative inline-block">
                 <div className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 font-normal text-gray-800 bg-white">
-                  RAVIZ Hotel Agent
+                  Royal Clinic Agent
                 </div>
               </div>
             </div>
@@ -539,7 +529,7 @@ function App() {
           }
         />
 
-        <AgentVisualizer isExpanded={isEventsPaneExpanded} />
+        <AgentVisualizer isExpanded={isEventsPaneExpanded} sessionStatus={sessionStatus} />
       </div>
 
       <BottomToolbar
